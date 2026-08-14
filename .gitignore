@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Environment variables
+.env
+
+# External raw data
+data/raw/*.xlsx
+
+# Generated files
+data/processed/
+output/
+
+# OS
+.DS_Store
+Thumbs.db
