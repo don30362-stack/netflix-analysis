@@ -34,6 +34,8 @@ print(df.groupby("category")["weekly_hours_viewed"].sum().sort_values(ascending=
 print("\n各類別 weekly_views 有效資料筆數：")
 print(df.groupby("category")["weekly_views"].count())
 
+
+# 建立電影 / 影集內容類型欄位
 df["content_type"] = df["category"].apply(
     lambda x: "Films" if x.startswith("Films") else "TV"
 )
@@ -58,3 +60,35 @@ print(
 
 print("\n電影與影集 weekly_views 有效資料筆數：")
 print(df.groupby("content_type")["weekly_views"].count())
+
+
+# 建立英語 / 非英語內容分類欄位
+df["language_type"] = df["category"].apply(
+    lambda x: "Non-English" if "Non-English" in x else "English"
+)
+
+print("\n英語與非英語內容資料筆數：")
+print(df["language_type"].value_counts())
+
+print("\n英語與非英語內容平均觀看時數：")
+print(
+    df.groupby("language_type")["weekly_hours_viewed"]
+    .mean()
+    .sort_values(ascending=False)
+)
+
+print("\n英語與非英語內容平均觀看次數：")
+print(df.groupby("language_type")["weekly_views"].mean().sort_values(ascending=False))
+
+print("\n英語與非英語內容總觀看時數：")
+print(
+    df.groupby("language_type")["weekly_hours_viewed"]
+    .sum()
+    .sort_values(ascending=False)
+)
+
+print("\n英語與非英語內容總觀看次數：")
+print(df.groupby("language_type")["weekly_views"].sum().sort_values(ascending=False))
+
+print("\n英語與非英語內容 weekly_views 有效資料筆數：")
+print(df.groupby("language_type")["weekly_views"].count())
