@@ -2,7 +2,6 @@ from pathlib import Path
 
 import requests
 
-
 url = "https://www.netflix.com/tudum/top10/data/all-weeks-global.xlsx"
 
 # 取得專案根目錄：以當前檔案為起點，轉為絕對路徑後往上推兩層資料夾
