@@ -33,3 +33,28 @@ print(df.groupby("category")["weekly_hours_viewed"].sum().sort_values(ascending=
 
 print("\n各類別 weekly_views 有效資料筆數：")
 print(df.groupby("category")["weekly_views"].count())
+
+df["content_type"] = df["category"].apply(
+    lambda x: "Films" if x.startswith("Films") else "TV"
+)
+
+print("\n電影與影集資料筆數：")
+print(df["content_type"].value_counts())
+
+print("\n電影與影集平均觀看時數：")
+print(
+    df.groupby("content_type")["weekly_hours_viewed"]
+    .mean()
+    .sort_values(ascending=False)
+)
+
+print("\n電影與影集平均觀看次數：")
+print(df.groupby("content_type")["weekly_views"].mean().sort_values(ascending=False))
+
+print("\n電影與影集總觀看時數：")
+print(
+    df.groupby("content_type")["weekly_hours_viewed"].sum().sort_values(ascending=False)
+)
+
+print("\n電影與影集 weekly_views 有效資料筆數：")
+print(df.groupby("content_type")["weekly_views"].count())
