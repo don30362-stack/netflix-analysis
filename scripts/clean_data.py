@@ -7,13 +7,37 @@ default_input_path = project_root / "data" / "raw" / "netflix_top10_raw.xlsx"
 
 default_output_path = project_root / "data" / "processed" / "netflix_top10_clean.csv"
 
+REQUIRED_COLUMNS = {
+    "week",
+    "category",
+    "weekly_rank",
+    "show_title",
+    "season_title",
+    "weekly_hours_viewed",
+    "runtime",
+    "weekly_views",
+    "cumulative_weeks_in_top_10",
+}
+
 
 def load_raw_data(input_path=default_input_path):
 
-    return pd.read_excel(input_path)
+    if not input_path.exists():
+        raise FileNotFoundError(f"找不到原始資料檔案：{input_path}")
+
+    try:
+        return pd.read_excel(input_path)
+
+    except Exception as error:
+        raise RuntimeError(f"讀取原始資料失敗：{input_path}") from error
 
 
 def clean_netflix_data(df):
+
+    missing_columns = REQUIRED_COLUMNS - set(df.columns)
+
+    if missing_columns:
+        raise ValueError(f"原始資料缺少必要欄位：{', '.join(sorted(missing_columns))}")
 
     df = df.drop_duplicates().copy()
 

@@ -2,7 +2,6 @@ from pathlib import Path
 
 import requests
 
-
 DATA_URL = "https://www.netflix.com/tudum/top10/data/all-weeks-global.xlsx"
 
 project_root = Path(__file__).resolve().parent.parent
@@ -13,14 +12,21 @@ def fetch_netflix_data(
     url=DATA_URL,
     output_path=default_output_path,
 ):
-    """下載 Netflix Top 10 原始資料並儲存為 Excel。"""
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    response = requests.get(url, timeout=30)
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
 
-    # 網站錯誤、網址失效或其他 HTTP 錯誤時直接中止
-    response.raise_for_status()
+    except requests.exceptions.Timeout as error:
+        raise RuntimeError("下載 Netflix 資料失敗：連線逾時。") from error
+
+    except requests.exceptions.RequestException as error:
+        raise RuntimeError(f"下載 Netflix 資料失敗：{error}") from error
+
+    if not response.content:
+        raise RuntimeError("下載 Netflix 資料失敗：伺服器回傳空白內容。")
 
     output_path.write_bytes(response.content)
 
