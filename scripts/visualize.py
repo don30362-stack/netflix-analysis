@@ -17,8 +17,8 @@ from scripts.analyze_data import (
     summarize_correlations,
 )
 
-project_root = Path(__file__).resolve().parent.parent
-default_charts_dir = project_root / "charts"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_CHARTS_DIR = PROJECT_ROOT / "charts"
 
 
 def configure_chinese_font():
@@ -50,7 +50,7 @@ def configure_chinese_font():
 # =========================
 def plot_content_type_comparison(
     df,
-    charts_dir=default_charts_dir,
+    charts_dir=DEFAULT_CHARTS_DIR,
 ):
     # 繪製電影與影集平均每週觀看次數比較圖。
 
@@ -137,7 +137,7 @@ def plot_content_type_comparison(
 # =========================
 def plot_language_comparison(
     df,
-    charts_dir=default_charts_dir,
+    charts_dir=DEFAULT_CHARTS_DIR,
 ):
     # 繪製英語與非英語內容平均觀看次數比較圖。
 
@@ -257,7 +257,7 @@ def plot_language_comparison(
 # =========================
 def plot_top_titles(
     df,
-    charts_dir=default_charts_dir,
+    charts_dir=DEFAULT_CHARTS_DIR,
 ):
     # 繪製 Top 10 累積停留週數最久作品排行。
 
@@ -334,7 +334,7 @@ def plot_top_titles(
 # =========================
 def plot_weekly_hours_trend(
     df,
-    charts_dir=default_charts_dir,
+    charts_dir=DEFAULT_CHARTS_DIR,
 ):
     # 繪製 Netflix Top 10 每週觀看時數趨勢圖。
 
@@ -420,7 +420,7 @@ def plot_weekly_hours_trend(
 # =========================
 def plot_correlation_distribution(
     df,
-    charts_dir=default_charts_dir,
+    charts_dir=DEFAULT_CHARTS_DIR,
     minimum_weeks=5,
 ):
     """繪製連續上榜區段 Pearson / Spearman 分布。"""
@@ -551,7 +551,7 @@ def plot_correlation_distribution(
 
 
 def main():
-    default_charts_dir.mkdir(
+    DEFAULT_CHARTS_DIR.mkdir(
         parents=True,
         exist_ok=True,
     )
@@ -565,7 +565,7 @@ def main():
     print("資料筆數：", len(df))
     print(
         "圖表輸出位置：",
-        default_charts_dir,
+        DEFAULT_CHARTS_DIR,
     )
 
     chart_functions = [

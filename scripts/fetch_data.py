@@ -4,13 +4,13 @@ import requests
 
 DATA_URL = "https://www.netflix.com/tudum/top10/data/all-weeks-global.xlsx"
 
-project_root = Path(__file__).resolve().parent.parent
-default_output_path = project_root / "data" / "raw" / "netflix_top10_raw.xlsx"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_OUTPUT_PATH = PROJECT_ROOT / "data" / "raw" / "netflix_top10_raw.xlsx"
 
 
 def fetch_netflix_data(
     url=DATA_URL,
-    output_path=default_output_path,
+    output_path=DEFAULT_OUTPUT_PATH,
 ):
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

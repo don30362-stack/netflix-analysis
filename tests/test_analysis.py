@@ -27,7 +27,7 @@ EXPECTED_CATEGORIES = {
 
 
 def test_data_quality():
-    """檢查正式清洗資料的結構與基本品質。"""
+    # 檢查正式清洗資料的結構與基本品質。
 
     df = load_data()
 
@@ -73,7 +73,7 @@ def test_data_quality():
 
     assert (df["weekly_views"].dropna() >= 0).all(), "weekly_views 不應出現負值"
 
-    assert (df["runtime"].dropna() >= 0).all(), "runtime 不應出現負值"
+    assert (df["runtime"].dropna() > 0).all(), "runtime 有效資料應大於 0"
 
     assert (df["cumulative_weeks_in_top_10"] >= 1).all(), (
         "cumulative_weeks_in_top_10 應至少為 1"
@@ -88,7 +88,7 @@ def test_data_quality():
 
 
 def test_consecutive_segments():
-    """檢查連續上榜區段的切分與主分析條件。"""
+    # 檢查連續上榜區段的切分與主分析條件。
 
     df = load_data()
 
@@ -145,7 +145,7 @@ def test_consecutive_segments():
 
 
 def test_correlation_function():
-    """利用答案已知的小型資料測試相關性計算函式。"""
+    # 利用答案已知的小型資料測試相關性計算函式。
 
     test_data = pd.DataFrame(
         {

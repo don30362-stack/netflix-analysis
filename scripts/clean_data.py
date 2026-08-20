@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-project_root = Path(__file__).resolve().parent.parent
-default_input_path = project_root / "data" / "raw" / "netflix_top10_raw.xlsx"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_INPUT_PATH = PROJECT_ROOT / "data" / "raw" / "netflix_top10_raw.xlsx"
 
-default_output_path = project_root / "data" / "processed" / "netflix_top10_clean.csv"
+DEFAULT_OUTPUT_PATH = PROJECT_ROOT / "data" / "processed" / "netflix_top10_clean.csv"
 
 REQUIRED_COLUMNS = {
     "week",
@@ -20,7 +20,7 @@ REQUIRED_COLUMNS = {
 }
 
 
-def load_raw_data(input_path=default_input_path):
+def load_raw_data(input_path=DEFAULT_INPUT_PATH):
 
     if not input_path.exists():
         raise FileNotFoundError(f"找不到原始資料檔案：{input_path}")
@@ -44,7 +44,7 @@ def clean_netflix_data(df):
     df["week"] = pd.to_datetime(df["week"])
 
     df["season_title"] = df["season_title"].fillna("Not specified")
-    # 將欄位轉換為數字型態，若遇到無法轉換的文字則強迫變更為 NaN 空值，避免程式崩潰
+    # 無法轉換的數值資料統一設為 NaN
     numeric_columns = [
         "weekly_rank",
         "weekly_hours_viewed",
@@ -59,15 +59,17 @@ def clean_netflix_data(df):
             errors="coerce",
         )
 
+    # runtime 為 0 或負數不符合實際片長，視為缺失值
+    df.loc[df["runtime"] <= 0, "runtime"] = pd.NA
+
     return df
 
 
 def save_cleaned_data(
     df,
-    output_path=default_output_path,
+    output_path=DEFAULT_OUTPUT_PATH,
 ):
-    """將清洗後資料儲存為 CSV。"""
-    # 建立已處理資料的儲存目錄（若已存在則忽略，不存在則連同父目錄一起建立）
+    # 將清洗後資料儲存為 CSV。
     output_path.parent.mkdir(
         parents=True,
         exist_ok=True,

@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pandas as pd
 
-project_root = Path(__file__).resolve().parent.parent
-default_input_path = project_root / "data" / "processed" / "netflix_top10_clean.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_INPUT_PATH = PROJECT_ROOT / "data" / "processed" / "netflix_top10_clean.csv"
 
 
-def load_data(input_path=default_input_path):
+def load_data(input_path=DEFAULT_INPUT_PATH):
     # 讀取清洗後的 Netflix Top 10 資料。
 
     df = pd.read_csv(input_path)
