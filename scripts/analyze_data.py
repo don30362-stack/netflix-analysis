@@ -89,7 +89,13 @@ def analyze_top_titles(df, top_n=10):
 def analyze_weekly_trend(df):
     # 分析 Netflix Top 10 整體每週觀看時數趨勢。
 
-    weekly_total_hours = df.groupby("week")["weekly_hours_viewed"].sum().sort_index()
+    weekly_total_hours = (
+        df.groupby("week")["weekly_hours_viewed"].sum(min_count=1).sort_index()
+    )
+    if not weekly_total_hours.notna().any():
+        raise ValueError(
+            f"每週觀看時數皆缺失，無法分析趨勢：{len(weekly_total_hours)} 週有效值為 0 筆。"
+        )
 
     max_week = weekly_total_hours.idxmax()
     max_hours = weekly_total_hours.max()
