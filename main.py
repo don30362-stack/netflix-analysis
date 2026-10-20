@@ -84,8 +84,8 @@ def main():
     # -------------------------
     top_titles = analyze_top_titles(df)
 
-    print("\nNetflix Top 10 累積停留週數最多的作品：")
-    print(top_titles)
+    print("\nNetflix Top 10 上榜項目最大累積週數：")
+    print(top_titles.to_string(index=False))
 
     # -------------------------
     # 問題 4：時間趨勢

@@ -71,13 +71,20 @@ def analyze_language(df):
 # 3. Top 10 停留最久作品
 # =========================
 def analyze_top_titles(df, top_n=10):
-    # 找出 Netflix Top 10 累積停留週數最高的作品。
+    """依公開上榜項目標籤取最大累積週數；三欄並非官方唯一作品 ID。"""
 
     result = (
-        df.groupby("show_title")["cumulative_weeks_in_top_10"]
+        df.groupby(
+            ["category", "show_title", "season_title"], as_index=False, dropna=False
+        )["cumulative_weeks_in_top_10"]
         .max()
-        .sort_values(ascending=False)
+        .sort_values(
+            ["cumulative_weeks_in_top_10", "show_title", "category", "season_title"],
+            ascending=[False, True, True, True],
+            na_position="last",
+        )
         .head(top_n)
+        .reset_index(drop=True)
     )
 
     return result
@@ -340,8 +347,8 @@ def main():
     # 3. Top 10 停留最久作品
     top_titles = analyze_top_titles(df)
 
-    print("\nNetflix Top 10 累積停留週數最多的作品：")
-    print(top_titles)
+    print("\nNetflix Top 10 上榜項目最大累積週數：")
+    print(top_titles.to_string(index=False))
 
     # 4. 時間趨勢
     trend_result = analyze_weekly_trend(df)

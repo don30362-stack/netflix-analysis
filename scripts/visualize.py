@@ -259,39 +259,59 @@ def plot_language_comparison(
 # =========================
 # 3. Top 10 停留最久作品
 # =========================
+def format_top_title_label(row):
+    """只整理顯示文字，不修改官方分類或推測缺少的季度。"""
+    title = row["show_title"]
+    season = row["season_title"]
+    has_season = isinstance(season, str) and season not in ("", "Not specified")
+    if has_season:
+        # 移除官方標籤中重複的作品前綴，保留其餘原文。
+        prefix = f"{title}: "
+        season_label = season[len(prefix):] if season.startswith(prefix) else season
+        label = f"{title}（{season_label}）"
+    elif row["category"].startswith("TV"):
+        label = f"{title}（季度未標示）"
+    else:
+        label = title
+    return f"{label}\n[{row['category']}]"
+
+
 def plot_top_titles(
     df,
     charts_dir=DEFAULT_CHARTS_DIR,
 ):
-    # 繪製 Top 10 累積停留週數最久作品排行。
+    # 繪製官方公開上榜項目的最大累積週數排行。
 
     top_titles = analyze_top_titles(
         df,
         top_n=10,
-    ).sort_values()
+    ).iloc[::-1]
+    labels = [format_top_title_label(row) for _, row in top_titles.iterrows()]
+    positions = np.arange(len(top_titles))
 
     fig, ax = plt.subplots(figsize=(10, 6.5))
 
     bars = ax.barh(
-        top_titles.index,
-        top_titles.values,
+        positions,
+        top_titles["cumulative_weeks_in_top_10"],
         color="#4C78A8",
     )
+    ax.set_yticks(positions, labels=labels)
 
     ax.set_title(
-        "Netflix Top 10 累積停留週數最久作品",
+        "Netflix Top 10 上榜項目最大累積週數",
         fontsize=16,
         fontweight="bold",
         pad=15,
     )
 
     ax.set_xlabel(
-        "累積停留週數",
+        "官方累積上榜週數（各項目最大值）",
         fontsize=12,
     )
 
     ax.set_ylabel(
-        "作品名稱",
+        "上榜項目（類別／季度標籤）",
         fontsize=12,
     )
 
