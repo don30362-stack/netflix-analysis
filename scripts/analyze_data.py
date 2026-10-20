@@ -135,6 +135,15 @@ def build_consecutive_segments(df):
 
     correlation_data = df.dropna(subset=["weekly_views"]).copy()
 
+    if correlation_data.empty:
+        return correlation_data.assign(
+            analysis_unit=pd.Series(dtype="str"),
+            days_since_previous=pd.Series(dtype="float64"),
+            new_streak=pd.Series(dtype="bool"),
+            streak_id=pd.Series(dtype="int64"),
+            streak_week=pd.Series(dtype="int64"),
+        )
+
     correlation_data["analysis_unit"] = correlation_data.apply(
         make_analysis_unit,
         axis=1,
@@ -207,11 +216,28 @@ def calculate_segment_correlations(
             }
         )
 
-    return pd.DataFrame(results)
+    return pd.DataFrame(
+        results,
+        columns=[
+            "analysis_unit", "streak_id", "category", "show_title",
+            "season_title", "weeks", "pearson", "spearman",
+        ],
+    )
 
 
 def summarize_correlations(segment_results):
     # 整理連續上榜區段相關性統計結果。
+
+    if segment_results.empty:
+        return {
+            "segment_count": 0,
+            "pearson_mean": float("nan"),
+            "pearson_median": float("nan"),
+            "pearson_negative_ratio": float("nan"),
+            "spearman_mean": float("nan"),
+            "spearman_median": float("nan"),
+            "spearman_negative_ratio": float("nan"),
+        }
 
     return {
         "segment_count": len(segment_results),
@@ -252,6 +278,37 @@ def run_sensitivity_analysis(
         )
 
     return pd.DataFrame(results)
+
+
+def print_correlation_results(summary, sensitivity_result, minimum_weeks=5):
+    """輸出第五題摘要；沒有有效區段時不格式化缺失統計值。"""
+    print(f"\n至少連續上榜 {minimum_weeks} 週的有效區段數：")
+    print(summary["segment_count"])
+
+    if summary["segment_count"] == 0:
+        print("無符合條件資料")
+    else:
+        print("\nPearson：")
+        print(f"平均數：{summary['pearson_mean']:.4f}")
+        print(f"中位數：{summary['pearson_median']:.4f}")
+        print(f"負相關比例：{summary['pearson_negative_ratio']:.1%}")
+
+        print("\nSpearman：")
+        print(f"平均數：{summary['spearman_mean']:.4f}")
+        print(f"中位數：{summary['spearman_median']:.4f}")
+        print(f"負相關比例：{summary['spearman_negative_ratio']:.1%}")
+
+    print("\n不同最低連續週數門檻的相關性結果：")
+    for _, row in sensitivity_result.iterrows():
+        print(f"\n至少連續 {int(row['minimum_weeks'])} 週")
+        print(f"區段數：{int(row['segment_count'])}")
+        if row["segment_count"] == 0:
+            print("無符合條件資料")
+            continue
+        print(f"Pearson 中位數：{row['pearson_median']:.4f}")
+        print(f"Pearson 負相關比例：{row['pearson_negative_ratio']:.1%}")
+        print(f"Spearman 中位數：{row['spearman_median']:.4f}")
+        print(f"Spearman 負相關比例：{row['spearman_negative_ratio']:.1%}")
 
 
 def main():
@@ -303,36 +360,8 @@ def main():
 
     summary = summarize_correlations(segment_results)
 
-    print("\n至少連續上榜 5 週的有效區段數：")
-    print(summary["segment_count"])
-
-    print("\nPearson：")
-    print(f"平均數：{summary['pearson_mean']:.4f}")
-    print(f"中位數：{summary['pearson_median']:.4f}")
-    print(f"負相關比例：{summary['pearson_negative_ratio']:.1%}")
-
-    print("\nSpearman：")
-    print(f"平均數：{summary['spearman_mean']:.4f}")
-    print(f"中位數：{summary['spearman_median']:.4f}")
-    print(f"負相關比例：{summary['spearman_negative_ratio']:.1%}")
-
-    # 敏感度分析
     sensitivity_result = run_sensitivity_analysis(correlation_data)
-
-    print("\n不同最低連續週數門檻的相關性結果：")
-
-    for _, row in sensitivity_result.iterrows():
-        print(f"\n至少連續 {int(row['minimum_weeks'])} 週")
-
-        print(f"區段數：{int(row['segment_count'])}")
-
-        print(f"Pearson 中位數：{row['pearson_median']:.4f}")
-
-        print(f"Pearson 負相關比例：{row['pearson_negative_ratio']:.1%}")
-
-        print(f"Spearman 中位數：{row['spearman_median']:.4f}")
-
-        print(f"Spearman 負相關比例：{row['spearman_negative_ratio']:.1%}")
+    print_correlation_results(summary, sensitivity_result)
 
 
 if __name__ == "__main__":

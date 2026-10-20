@@ -119,6 +119,8 @@ def plot_content_type_comparison(
 
     plt.tight_layout()
 
+    charts_dir = Path(charts_dir)
+    charts_dir.mkdir(parents=True, exist_ok=True)
     output_path = charts_dir / "01_films_vs_tv_average_views.png"
 
     plt.savefig(
@@ -239,6 +241,8 @@ def plot_language_comparison(
 
     plt.tight_layout()
 
+    charts_dir = Path(charts_dir)
+    charts_dir.mkdir(parents=True, exist_ok=True)
     output_path = charts_dir / "02_english_vs_non_english_average_views.png"
 
     plt.savefig(
@@ -316,6 +320,8 @@ def plot_top_titles(
 
     plt.tight_layout()
 
+    charts_dir = Path(charts_dir)
+    charts_dir.mkdir(parents=True, exist_ok=True)
     output_path = charts_dir / "03_top10_longest_stay_titles.png"
 
     plt.savefig(
@@ -402,6 +408,8 @@ def plot_weekly_hours_trend(
 
     plt.tight_layout()
 
+    charts_dir = Path(charts_dir)
+    charts_dir.mkdir(parents=True, exist_ok=True)
     output_path = charts_dir / "04_weekly_total_hours_trend.png"
 
     plt.savefig(
@@ -435,6 +443,21 @@ def plot_correlation_distribution(
     summary = summarize_correlations(segment_results)
 
     fig, ax = plt.subplots(figsize=(10, 6))
+
+    if summary["segment_count"] == 0:
+        ax.set_title(f"至少連續上榜 {minimum_weeks} 週區段的觀看熱度相關係數分布")
+        ax.text(
+            0.5, 0.5, "無符合條件資料\n有效區段：0",
+            transform=ax.transAxes, ha="center", va="center", fontsize=16,
+        )
+        ax.set_axis_off()
+        charts_dir = Path(charts_dir)
+        charts_dir.mkdir(parents=True, exist_ok=True)
+        output_path = charts_dir / "05_continuous_run_correlation_distribution.png"
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
+        plt.close()
+        return output_path
 
     bins = np.linspace(
         -1,
@@ -537,6 +560,8 @@ def plot_correlation_distribution(
 
     plt.tight_layout()
 
+    charts_dir = Path(charts_dir)
+    charts_dir.mkdir(parents=True, exist_ok=True)
     output_path = charts_dir / "05_continuous_run_correlation_distribution.png"
 
     plt.savefig(

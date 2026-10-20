@@ -7,6 +7,7 @@ from scripts.analyze_data import (
     build_consecutive_segments,
     calculate_segment_correlations,
     load_data,
+    print_correlation_results,
     run_sensitivity_analysis,
     summarize_correlations,
 )
@@ -114,31 +115,8 @@ def main():
 
     summary = summarize_correlations(segment_results)
 
-    print("\n至少連續上榜 5 週的有效區段數：")
-    print(summary["segment_count"])
-
-    print("\nPearson：")
-    print(f"平均數：{summary['pearson_mean']:.4f}")
-    print(f"中位數：{summary['pearson_median']:.4f}")
-    print(f"負相關比例：{summary['pearson_negative_ratio']:.1%}")
-
-    print("\nSpearman：")
-    print(f"平均數：{summary['spearman_mean']:.4f}")
-    print(f"中位數：{summary['spearman_median']:.4f}")
-    print(f"負相關比例：{summary['spearman_negative_ratio']:.1%}")
-
-    # 敏感度分析
     sensitivity_result = run_sensitivity_analysis(correlation_data)
-
-    print("\n不同最低連續週數門檻的相關性結果：")
-
-    for _, row in sensitivity_result.iterrows():
-        print(f"\n至少連續 {int(row['minimum_weeks'])} 週")
-        print(f"區段數：{int(row['segment_count'])}")
-        print(f"Pearson 中位數：{row['pearson_median']:.4f}")
-        print(f"Pearson 負相關比例：{row['pearson_negative_ratio']:.1%}")
-        print(f"Spearman 中位數：{row['spearman_median']:.4f}")
-        print(f"Spearman 負相關比例：{row['spearman_negative_ratio']:.1%}")
+    print_correlation_results(summary, sensitivity_result)
 
     # =========================
     # 4. 圖表輸出
