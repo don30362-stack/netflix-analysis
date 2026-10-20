@@ -135,7 +135,7 @@ def analyze_weekly_trend(df):
 # 5. 連續上榜區段分析
 # =========================
 def make_analysis_unit(row):
-    # 建立相關性分析使用的作品分析單位。
+    # 以公開欄位建立分析鍵，並非官方唯一作品 ID；TV 不以片長切分季度。
 
     if row["category"].startswith("TV"):
         return f"{row['category']} | {row['show_title']} | {row['season_title']}"
@@ -144,7 +144,11 @@ def make_analysis_unit(row):
 
 
 def build_consecutive_segments(df):
-    # 建立每部作品的連續 Top 10 上榜區段。
+    """建立同一分析鍵、具有有效觀看次數且相鄰七天的上榜觀測區段。
+
+    先排除缺 weekly_views 的列；缺值或資料起訖可能截斷區段，
+    因此 streak_week 是有效觀測區段內的週次，不是完整上榜生命週期。
+    """
 
     correlation_data = df.dropna(subset=["weekly_views"]).copy()
 
@@ -168,8 +172,8 @@ def build_consecutive_segments(df):
         correlation_data.groupby("analysis_unit")["week"].diff().dt.days
     )
 
-    # 與上一筆不是相隔 7 天，
-    # 代表中途曾掉出 Top 10，建立新的區段
+    # 與上一筆有效觀測不是相隔 7 天就建立新區段；
+    # 可能是掉榜或觀看次數缺失，不能只由日期差判定原因。
     correlation_data["new_streak"] = correlation_data["days_since_previous"].ne(7)
 
     correlation_data["streak_id"] = correlation_data.groupby("analysis_unit")[
@@ -187,7 +191,8 @@ def calculate_segment_correlations(
     correlation_data,
     minimum_weeks=5,
 ):
-    # 計算各連續上榜區段的 Pearson 與 Spearman 相關係數。
+    # 至少 minimum_weeks 個連續有效觀測週才計算區段內相關性；
+    # 排除固定值／無效係數，不代表觀測到完整上榜生命週期。
 
     results = []
 
@@ -239,7 +244,7 @@ def calculate_segment_correlations(
 
 
 def summarize_correlations(segment_results):
-    # 整理連續上榜區段相關性統計結果。
+    # 每個有效區段等權，並非等作品加權；同一項目可貢獻多個區段。
 
     if segment_results.empty:
         return {
