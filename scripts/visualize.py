@@ -21,6 +21,20 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CHARTS_DIR = PROJECT_ROOT / "charts"
 
 
+def _data_period(df, views_only=False):
+    """圖註日期取自輸入資料，避免固定快照日期套到其他資料。"""
+    weeks = df.loc[df["weekly_views"].notna(), "week"] if views_only else df["week"]
+    if weeks.empty:
+        return "無有效資料"
+    return f"{weeks.min():%Y-%m-%d}～{weeks.max():%Y-%m-%d}"
+
+
+def _add_chart_note(fig, text):
+    """保留底部空間，讓一至兩行口徑說明與座標軸分開。"""
+    fig.text(0.5, 0.025, text, ha="center", va="bottom", fontsize=11, linespacing=1.6)
+    fig.tight_layout(rect=(0, 0.16, 1, 1))
+
+
 def configure_chinese_font():
     # 設定 Matplotlib 可用的中文字型。
 
@@ -75,7 +89,7 @@ def plot_content_type_comparison(
     )
 
     ax.set_title(
-        "Netflix 電影與影集平均每週觀看次數比較",
+        "Netflix 電影與影集平均觀看次數",
         fontsize=16,
         fontweight="bold",
         pad=15,
@@ -117,7 +131,11 @@ def plot_content_type_comparison(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    plt.tight_layout()
+    _add_chart_note(
+        fig,
+        f"有效期間：{_data_period(df, views_only=True)}｜上榜項目－週平均\n"
+        "Netflix 全球 Top 10｜views＝觀看時數÷片長，非獨立觀看人數",
+    )
 
     charts_dir = Path(charts_dir)
     charts_dir.mkdir(parents=True, exist_ok=True)
@@ -181,7 +199,7 @@ def plot_language_comparison(
     )
 
     ax.set_title(
-        "Netflix 英語與非英語內容平均每週觀看次數比較",
+        "Netflix 英語與非英語平均觀看次數",
         fontsize=16,
         fontweight="bold",
         pad=15,
@@ -239,7 +257,11 @@ def plot_language_comparison(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    plt.tight_layout()
+    _add_chart_note(
+        fig,
+        f"有效期間：{_data_period(df, views_only=True)}｜上榜項目－週平均\n"
+        "語言分類依 Netflix 官方 category｜views 非獨立觀看人數",
+    )
 
     charts_dir = Path(charts_dir)
     charts_dir.mkdir(parents=True, exist_ok=True)
@@ -289,7 +311,7 @@ def plot_top_titles(
     labels = [format_top_title_label(row) for _, row in top_titles.iterrows()]
     positions = np.arange(len(top_titles))
 
-    fig, ax = plt.subplots(figsize=(10, 6.5))
+    fig, ax = plt.subplots(figsize=(10, 7.5))
 
     bars = ax.barh(
         positions,
@@ -338,7 +360,13 @@ def plot_top_titles(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    plt.tight_layout()
+    # 排行本身不要求 week；簡化輸入沒有日期時，不捏造資料截止日。
+    cutoff = f"{df['week'].max():%Y-%m-%d}" if "week" in df and not df.empty else "未提供日期"
+    _add_chart_note(
+        fig,
+        f"資料截止：{cutoff}｜Netflix 全球 Top 10\n"
+        "電影或影集季度／標籤各自取最大累積週數，不加總不同季度",
+    )
 
     charts_dir = Path(charts_dir)
     charts_dir.mkdir(parents=True, exist_ok=True)
@@ -376,7 +404,7 @@ def plot_weekly_hours_trend(
         weekly_total_hours.index,
         weekly_total_hours.values,
         linewidth=1.2,
-        alpha=0.45,
+        alpha=0.8,
         color="#9E9E9E",
         label="每週總觀看時數",
     )
@@ -386,11 +414,11 @@ def plot_weekly_hours_trend(
         moving_average.values,
         linewidth=2.8,
         color="#C62828",
-        label="13 週移動平均趨勢",
+        label="13 週置中移動平均",
     )
 
     ax.set_title(
-        "Netflix Top 10 整體每週觀看時數趨勢",
+        "Netflix 全球 Top 10 四類榜單每週觀看時數合計",
         fontsize=16,
         fontweight="bold",
         pad=15,
@@ -409,6 +437,7 @@ def plot_weekly_hours_trend(
     ax.xaxis.set_major_locator(mdates.YearLocator())
 
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.set_xlim(weekly_total_hours.index.min(), weekly_total_hours.index.max())
 
     ax.legend(
         frameon=False,
@@ -426,7 +455,11 @@ def plot_weekly_hours_trend(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    plt.tight_layout()
+    _add_chart_note(
+        fig,
+        f"資料期間：{_data_period(df)}｜13 週置中平均，兩端各 6 週無平滑值\n"
+        "2023 年 Netflix 排名方法曾變更，跨期比較需留意；此圖非全平台觀看量",
+    )
 
     charts_dir = Path(charts_dir)
     charts_dir.mkdir(parents=True, exist_ok=True)
@@ -462,10 +495,23 @@ def plot_correlation_distribution(
 
     summary = summarize_correlations(segment_results)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 7))
+    fig.suptitle(
+        "Netflix 作品連續上榜越久，觀看次數通常越少嗎？",
+        fontsize=16, fontweight="bold", y=0.97,
+    )
+    fig.text(
+        0.5, 0.91,
+        f"連續上榜週次與當週觀看次數的相關性｜{summary['segment_count']} 個有效區段",
+        ha="center", fontsize=12,
+    )
+    note = (
+        f"有效 weekly_views：{_data_period(df, views_only=True)}｜至少連續 {minimum_weeks} 個有效上榜觀測週\n"
+        "每個有效區段等權，非每部作品等權｜不代表完整上榜生命週期｜相關不等於因果"
+    )
+    fig.text(0.5, 0.025, note, ha="center", va="bottom", fontsize=10.5, linespacing=1.6)
 
     if summary["segment_count"] == 0:
-        ax.set_title(f"至少連續上榜 {minimum_weeks} 週區段的觀看熱度相關係數分布")
         ax.text(
             0.5, 0.5, "無符合條件資料\n有效區段：0",
             transform=ax.transAxes, ha="center", va="center", fontsize=16,
@@ -474,7 +520,7 @@ def plot_correlation_distribution(
         charts_dir = Path(charts_dir)
         charts_dir.mkdir(parents=True, exist_ok=True)
         output_path = charts_dir / "05_continuous_run_correlation_distribution.png"
-        plt.tight_layout()
+        fig.subplots_adjust(left=0.09, right=0.97, bottom=0.28, top=0.79)
         plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
         return output_path
@@ -511,16 +557,16 @@ def plot_correlation_distribution(
         label="零相關",
     )
 
-    ax.set_title(
-        f"至少連續上榜 {minimum_weeks} 週區段的觀看熱度相關係數分布",
-        fontsize=16,
-        fontweight="bold",
-        pad=15,
-    )
+    # 結論跟隨輸入資料，不把本次快照的主要趨勢套到其他樣本。
+    if summary["pearson_negative_ratio"] > 0.5 and summary["spearman_negative_ratio"] > 0.5:
+        conclusion = "多數符合條件的區段：上榜週次增加，當週觀看次數傾向下降。"
+    else:
+        conclusion = "相關方向與強弱見下圖；比例僅描述符合條件的區段。"
+    fig.text(0.5, 0.855, conclusion, ha="center", fontsize=12, fontweight="bold")
 
     ax.set_xlabel(
-        "連續上榜週次與當週觀看次數的相關係數",
-        fontsize=12,
+        "相關係數：-1 強負相關｜0 無線性／單調相關｜+1 強正相關",
+        fontsize=11,
     )
 
     ax.set_ylabel(
@@ -532,6 +578,8 @@ def plot_correlation_distribution(
         -1.05,
         1.05,
     )
+    fig.text(0.09, 0.155, "← 負相關：週次越後，觀看次數傾向越少", fontsize=11, ha="left")
+    fig.text(0.97, 0.155, "正相關：週次越後，觀看次數傾向越多 →", fontsize=11, ha="right")
 
     ax.yaxis.grid(
         True,
@@ -545,16 +593,14 @@ def plot_correlation_distribution(
     ax.spines["right"].set_visible(False)
 
     summary_text = (
-        f"有效區段："
-        f"{summary['segment_count']}\n"
+        f"Pearson 負相關區段："
+        f"{summary['pearson_negative_ratio']:.1%}\n"
+        f"Spearman 負相關區段："
+        f"{summary['spearman_negative_ratio']:.1%}\n"
         f"Pearson 中位數："
         f"{summary['pearson_median']:.4f}\n"
-        f"Pearson 負相關："
-        f"{summary['pearson_negative_ratio']:.1%}\n"
         f"Spearman 中位數："
-        f"{summary['spearman_median']:.4f}\n"
-        f"Spearman 負相關："
-        f"{summary['spearman_negative_ratio']:.1%}"
+        f"{summary['spearman_median']:.4f}"
     )
 
     ax.text(
@@ -564,7 +610,7 @@ def plot_correlation_distribution(
         transform=ax.transAxes,
         ha="right",
         va="top",
-        fontsize=10.5,
+        fontsize=12,
         bbox={
             "boxstyle": "round,pad=0.5",
             "facecolor": "white",
@@ -578,7 +624,7 @@ def plot_correlation_distribution(
         loc="lower right",
     )
 
-    plt.tight_layout()
+    fig.subplots_adjust(left=0.09, right=0.97, bottom=0.28, top=0.79)
 
     charts_dir = Path(charts_dir)
     charts_dir.mkdir(parents=True, exist_ok=True)
