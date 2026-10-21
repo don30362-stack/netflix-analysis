@@ -1,6 +1,9 @@
+import unittest
+
 import pandas as pd
 
 from scripts.analyze_data import (
+    DEFAULT_INPUT_PATH,
     build_consecutive_segments,
     calculate_segment_correlations,
     load_data,
@@ -26,10 +29,10 @@ EXPECTED_CATEGORIES = {
 }
 
 
-def test_data_quality():
-    # 檢查正式清洗資料的結構與基本品質。
+def test_data_quality(input_path=DEFAULT_INPUT_PATH):
+    # 驗證指定 CSV；預設正式資料，離線整合測試則明確傳入人造 CSV。
 
-    df = load_data()
+    df = load_data(input_path)
 
     # 1. DataFrame 不可為空
     assert not df.empty, "分析資料不可為空"
@@ -87,10 +90,10 @@ def test_data_quality():
     )
 
 
-def test_consecutive_segments():
-    # 檢查連續上榜區段的切分與主分析條件。
+def test_consecutive_segments(input_path=DEFAULT_INPUT_PATH):
+    # 驗證指定 CSV 的區段；不將人造資料通過視為正式 Netflix 資料驗證。
 
-    df = load_data()
+    df = load_data(input_path)
 
     correlation_data = build_consecutive_segments(df)
 
@@ -187,11 +190,18 @@ def test_correlation_function():
     assert abs(spearman + 1) < 1e-10, "完全遞減資料的 Spearman 應為 -1"
 
 
-def main():
-    test_data_quality()
+def load_tests(loader, tests, pattern):
+    # unittest discovery 僅收錄此模組不需正式 CSV 的固定案例。
+    tests.addTest(unittest.FunctionTestCase(test_correlation_function))
+    return tests
+
+
+def main(input_path=DEFAULT_INPUT_PATH):
+    print(f"===== 指定 CSV 資料驗證：{input_path} =====")
+    test_data_quality(input_path)
     print("✓ 資料品質測試通過")
 
-    test_consecutive_segments()
+    test_consecutive_segments(input_path)
     print("✓ 連續上榜區段測試通過")
 
     test_correlation_function()
